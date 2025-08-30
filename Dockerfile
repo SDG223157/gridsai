@@ -1,11 +1,12 @@
-# Multi-stage Dockerfile for Coolify deployment
-# CACHE BUST: 2024-08-30-v2 - Force complete rebuild with new database setup
-FROM python:3.11-slim AS base
+# GridTrader Pro Dockerfile - COMPLETE REBUILD v3
+# FORCE REBUILD: 2024-08-30-FINAL - New database setup approach
+FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PIP_NO_CACHE_DIR=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV REBUILD_CACHE=v3
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \

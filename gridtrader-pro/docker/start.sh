@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
-echo "Starting GridTrader Pro..."
+echo "🚀 Starting GridTrader Pro v3 - NEW DATABASE SETUP 🚀"
+echo "Version: 2024-08-30-FINAL"
+echo "=================================================="
 
 # Wait for external services (if using external MySQL/Redis)
 if [ "$WAIT_FOR_SERVICES" = "true" ]; then
