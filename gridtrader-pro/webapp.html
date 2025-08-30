@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GridTrader Pro - Systematic Investment Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8fafc;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #2563eb;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-outline {
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            background: white;
+        }
+
+        .btn-outline:hover {
+            border-color: #2563eb;
+            color: #2563eb;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Auth Section */
+        .auth-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 3rem;
+            margin: 2rem auto;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .auth-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #1e293b;
+        }
+
+        .auth-subtitle {
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+
+        .auth-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            color: #374151;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .google-btn:hover {
+            border-color: #2563eb;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0;
+            color: #9ca3af;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .divider span {
+            padding: 0 1rem;
+            font-size: 0.875rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Dashboard Section */
+        .dashboard {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        .dashboard-header {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .dashboard-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-subtitle {
+            color: #64748b;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-color: #2563eb;
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #1e293b;
+        }
+
+        .card-description {
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+
+        .card-action {
+            color: #2563eb;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .quick-actions-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            color: #1e293b;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #374151;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            border-color: #2563eb;
+            background: #f8fafc;
+        }
+
+        .action-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .auth-buttons {
+                flex-direction: column;
+            }
+
+            .main {
+                padding: 1rem;
+            }
+        }
+
+        /* Hidden class */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">
+                📈 GridTrader Pro
+            </div>
+            
+            <!-- Navigation for authenticated users -->
+            <ul class="nav-links" id="mainNav" style="display: none;">
+                <li><a href="#" onclick="showDashboard()">Dashboard</a></li>
+                <li><a href="#" onclick="showPortfolios()">Portfolios</a></li>
+                <li><a href="#" onclick="showGridTrading()">Grid Trading</a></li>
+                <li><a href="#" onclick="showMarketData()">Market Data</a></li>
+                <li><a href="#" onclick="showAnalytics()">Analytics</a></li>
+            </ul>
+            
+            <!-- Auth buttons -->
+            <div class="auth-buttons" id="authButtons">
+                <a href="#" class="btn btn-outline" onclick="showLogin()">Sign In</a>
+                <a href="#" class="btn btn-primary" onclick="showRegister()">Get Started</a>
+            </div>
+            
+            <!-- User menu (hidden by default) -->
+            <div class="auth-buttons hidden" id="userMenu">
+                <span id="userName" style="color: #64748b;">Welcome back!</span>
+                <a href="#" class="btn btn-outline" onclick="logout()">Sign Out</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <!-- Authentication Section -->
+        <div id="authSection">
+            <!-- Login Form -->
+            <div class="auth-container" id="loginForm">
+                <h1 class="auth-title">Welcome Back</h1>
+                <p class="auth-subtitle">Sign in to your GridTrader Pro account</p>
+                
+                <div class="auth-methods">
+                    <a href="/api/v1/auth/google" class="google-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24">
+                            <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Continue with Google
+                    </a>
+                    
+                    <div class="divider">
+                        <span>or</span>
+                    </div>
+                    
+                    <form onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label class="form-label" for="email">Email</label>
+                            <input type="email" id="email" class="form-input" placeholder="your.email@example.com" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="password">Password</label>
+                            <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                            Sign In
+                        </button>
+                    </form>
+                    
+                    <p style="margin-top: 1.5rem; color: #64748b;">
+                        Don't have an account? 
+                        <a href="#" onclick="showRegister()" style="color: #2563eb; text-decoration: none;">Create account</a>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Register Form -->
+            <div class="auth-container hidden" id="registerForm">
+                <h1 class="auth-title">Create Account</h1>
+                <p class="auth-subtitle">Join GridTrader Pro and start systematic investing</p>
+                
+                <div class="auth-methods">
+                    <a href="/api/v1/auth/google" class="google-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24">
+                            <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Sign up with Google
+                    </a>
+                    
+                    <div class="divider">
+                        <span>or</span>
+                    </div>
+                    
+                    <form onsubmit="handleRegister(event)">
+                        <div class="form-group">
+                            <label class="form-label" for="regName">Full Name</label>
+                            <input type="text" id="regName" class="form-input" placeholder="John Doe" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="regEmail">Email</label>
+                            <input type="email" id="regEmail" class="form-input" placeholder="your.email@example.com" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="regPassword">Password</label>
+                            <input type="password" id="regPassword" class="form-input" placeholder="Create a strong password" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                            Create Account
+                        </button>
+                    </form>
+                    
+                    <p style="margin-top: 1.5rem; color: #64748b;">
+                        Already have an account? 
+                        <a href="#" onclick="showLogin()" style="color: #2563eb; text-decoration: none;">Sign in</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboardSection" class="dashboard">
+            <div class="dashboard-header">
+                <h1 class="dashboard-title">Investment Dashboard</h1>
+                <p class="dashboard-subtitle">Manage your systematic investment portfolio</p>
+            </div>
+            
+            <div class="dashboard-grid">
+                <div class="dashboard-card" onclick="window.open('/dashboard', '_blank')">
+                    <div class="card-icon">📊</div>
+                    <h3 class="card-title">Interactive Dashboard</h3>
+                    <p class="card-description">Access the full Streamlit dashboard with real-time charts and analytics</p>
+                    <a href="/dashboard" class="card-action">Open Dashboard →</a>
+                </div>
+                
+                <div class="dashboard-card" onclick="window.open('/api/v1/docs', '_blank')">
+                    <div class="card-icon">📚</div>
+                    <h3 class="card-title">API Documentation</h3>
+                    <p class="card-description">Explore the complete REST API with Swagger UI</p>
+                    <a href="/api/v1/docs" class="card-action">View API Docs →</a>
+                </div>
+                
+                <div class="dashboard-card" onclick="showPortfolios()">
+                    <div class="card-icon">💼</div>
+                    <h3 class="card-title">Portfolio Management</h3>
+                    <p class="card-description">Create and manage your investment portfolios</p>
+                    <a href="#" class="card-action">Manage Portfolios →</a>
+                </div>
+                
+                <div class="dashboard-card" onclick="showGridTrading()">
+                    <div class="card-icon">⚡</div>
+                    <h3 class="card-title">Grid Trading</h3>
+                    <p class="card-description">Set up automated grid trading strategies</p>
+                    <a href="#" class="card-action">Configure Grids →</a>
+                </div>
+                
+                <div class="dashboard-card" onclick="showMarketData()">
+                    <div class="card-icon">📈</div>
+                    <h3 class="card-title">Market Data</h3>
+                    <p class="card-description">Access real-time market data and analysis</p>
+                    <a href="#" class="card-action">View Markets →</a>
+                </div>
+                
+                <div class="dashboard-card" onclick="showAnalytics()">
+                    <div class="card-icon">📊</div>
+                    <h3 class="card-title">Analytics</h3>
+                    <p class="card-description">Portfolio performance and risk analysis</p>
+                    <a href="#" class="card-action">View Analytics →</a>
+                </div>
+            </div>
+            
+            <div class="quick-actions">
+                <h2 class="quick-actions-title">Quick Actions</h2>
+                <div class="actions-grid">
+                    <a href="#" class="action-btn" onclick="createPortfolio()">
+                        <div class="action-icon">💼</div>
+                        <span>Create Portfolio</span>
+                    </a>
+                    <a href="#" class="action-btn" onclick="setupGrid()">
+                        <div class="action-icon">⚡</div>
+                        <span>Setup Grid</span>
+                    </a>
+                    <a href="#" class="action-btn" onclick="addPosition()">
+                        <div class="action-icon">📈</div>
+                        <span>Add Position</span>
+                    </a>
+                    <a href="#" class="action-btn" onclick="viewAnalytics()">
+                        <div class="action-icon">📊</div>
+                        <span>View Analytics</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Check for authentication token in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const authSuccess = urlParams.get('auth');
+        
+        if (token || authSuccess) {
+            // User is authenticated
+            showDashboard();
+            document.getElementById('userName').textContent = 'Welcome back!';
+        }
+
+        function showLogin() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('mainNav').style.display = 'none';
+            document.getElementById('authButtons').style.display = 'flex';
+            document.getElementById('userMenu').classList.add('hidden');
+        }
+
+        function showRegister() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('mainNav').style.display = 'none';
+            document.getElementById('authButtons').style.display = 'flex';
+            document.getElementById('userMenu').classList.add('hidden');
+        }
+
+        function showDashboard() {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('mainNav').style.display = 'flex';
+            document.getElementById('authButtons').style.display = 'none';
+            document.getElementById('userMenu').classList.remove('hidden');
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Call login API
+            fetch('/api/v1/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.access_token) {
+                    localStorage.setItem('token', data.access_token);
+                    showDashboard();
+                } else {
+                    alert('Login failed: ' + (data.detail || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Login error:', error);
+                alert('Login failed. Please try again.');
+            });
+        }
+
+        function handleRegister(event) {
+            event.preventDefault();
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            
+            // Call register API
+            fetch('/api/v1/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    email, 
+                    password, 
+                    display_name: name 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.access_token) {
+                    localStorage.setItem('token', data.access_token);
+                    showDashboard();
+                } else {
+                    alert('Registration failed: ' + (data.detail || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Registration error:', error);
+                alert('Registration failed. Please try again.');
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            showLogin();
+        }
+
+        // Navigation functions
+        function showPortfolios() {
+            alert('Portfolio management feature - Redirecting to API endpoint');
+            window.open('/api/v1/portfolios', '_blank');
+        }
+
+        function showGridTrading() {
+            alert('Grid trading feature - Redirecting to interactive dashboard');
+            window.open('/dashboard', '_blank');
+        }
+
+        function showMarketData() {
+            alert('Market data feature - Redirecting to securities search');
+            window.open('/api/v1/market/securities/search?q=AAPL', '_blank');
+        }
+
+        function showAnalytics() {
+            alert('Analytics feature - Redirecting to API documentation');
+            window.open('/api/v1/docs', '_blank');
+        }
+
+        // Quick actions
+        function createPortfolio() {
+            alert('Create Portfolio - This would open portfolio creation form');
+            window.open('/api/v1/docs#/portfolios/create_portfolio_api_v1_portfolios_post', '_blank');
+        }
+
+        function setupGrid() {
+            alert('Setup Grid Trading - This would open grid configuration');
+            window.open('/dashboard', '_blank');
+        }
+
+        function addPosition() {
+            alert('Add Position - This would open position management');
+            window.open('/api/v1/docs#/market_data', '_blank');
+        }
+
+        function viewAnalytics() {
+            alert('View Analytics - This would open analytics dashboard');
+            window.open('/api/v1/docs#/analytics', '_blank');
+        }
+
+        // Check if user is already authenticated
+        const token = localStorage.getItem('token');
+        if (token) {
+            // Verify token with API
+            fetch('/api/v1/auth/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    showDashboard();
+                } else {
+                    localStorage.removeItem('token');
+                    showLogin();
+                }
+            })
+            .catch(() => {
+                showLogin();
+            });
+        } else {
+            showLogin();
+        }
+    </script>
+</body>
+</html>

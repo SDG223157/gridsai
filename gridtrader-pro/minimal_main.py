@@ -63,6 +63,36 @@ async def google_auth():
     )
     return RedirectResponse(url=google_oauth_url)
 
+@app.post("/api/v1/auth/login")
+async def login(email: str, password: str):
+    """Email/password login"""
+    # Placeholder implementation
+    if email and password:
+        return {
+            "access_token": "demo_token_" + email.split('@')[0],
+            "token_type": "bearer",
+            "user_id": "demo_user_123",
+            "email": email,
+            "message": "Login successful (demo mode)"
+        }
+    else:
+        raise HTTPException(status_code=400, detail="Invalid credentials")
+
+@app.post("/api/v1/auth/register") 
+async def register(email: str, password: str, display_name: str = None):
+    """User registration"""
+    # Placeholder implementation
+    if email and password:
+        return {
+            "access_token": "demo_token_" + email.split('@')[0],
+            "token_type": "bearer", 
+            "user_id": "demo_user_" + email.split('@')[0],
+            "email": email,
+            "message": "Registration successful (demo mode)"
+        }
+    else:
+        raise HTTPException(status_code=400, detail="Invalid registration data")
+
 @app.get("/api/v1/auth/google/callback")
 async def google_callback(code: str = None, error: str = None):
     """Handle Google OAuth callback"""
