@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for Coolify deployment
-FROM python:3.11-slim as base
+FROM python:3.11-slim AS base
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -28,6 +28,12 @@ WORKDIR /app
 COPY gridtrader-pro/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy configuration files first (from build context)
+COPY gridtrader-pro/docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY gridtrader-pro/docker/nginx.conf /etc/nginx/sites-available/default
+COPY gridtrader-pro/docker/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 # Copy application code
 COPY gridtrader-pro/ .
 RUN chown -R appuser:appuser /app
@@ -36,12 +42,6 @@ RUN chown -R appuser:appuser /app
 RUN mkdir -p /app/logs /var/log/supervisor /var/log/nginx \
     && chown -R appuser:appuser /app/logs \
     && chmod 755 /app/logs
-
-# Copy configuration files
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY docker/nginx.conf /etc/nginx/sites-available/default
-COPY docker/start.sh /app/start.sh
-RUN chmod +x /app/start.sh
 
 # Expose port
 EXPOSE 3000
