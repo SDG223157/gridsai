@@ -20,14 +20,16 @@ if [ "$WAIT_FOR_SERVICES" = "true" ]; then
     fi
 fi
 
-# Run database setup
-echo "Setting up database..."
-cd /app && python setup_database.py
+# Run database setup with simple SQL approach
+echo "=== GridTrader Pro Database Setup ==="
+cd /app && python simple_db_setup.py
 
 if [ $? -ne 0 ]; then
     echo "Database setup failed, exiting..."
     exit 1
 fi
+
+echo "Database setup completed successfully!"
 
 # Start services with supervisor
 echo "Starting all services..."

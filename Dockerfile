@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for Coolify deployment
-# Updated: 2024-08-30 - Fixed database initialization
+# CACHE BUST: 2024-08-30-v2 - Force complete rebuild with new database setup
 FROM python:3.11-slim AS base
 
 ENV PYTHONUNBUFFERED=1
