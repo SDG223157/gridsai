@@ -31,21 +31,34 @@ print('Database tables created successfully')
 # Initialize sample data if needed
 if [ "$INIT_SAMPLE_DATA" = "true" ]; then
     echo "Initializing sample data..."
+    # Wait a moment for database to be fully ready
+    sleep 2
     cd /app && python -c "
-from app.database import SessionLocal
-from app.models import Securities
+from app.database import SessionLocal, engine
+from app.models import Securities, Base
+import time
+
+# Ensure all tables exist
+Base.metadata.create_all(bind=engine)
+time.sleep(1)
+
 db = SessionLocal()
 try:
     popular_symbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'SPY', 'QQQ']
-    existing_symbols = set(s[0] for s in db.query(Securities.symbol).all())
     
-    for symbol in popular_symbols:
-        if symbol not in existing_symbols:
+    # Check if any securities already exist
+    existing_count = db.query(Securities).count()
+    
+    if existing_count == 0:
+        for symbol in popular_symbols:
             security = Securities(symbol=symbol, name=f'{symbol} Corp', is_active=True)
             db.add(security)
-    
-    db.commit()
-    print(f'Sample data initialized')
+        
+        db.commit()
+        print(f'Sample data initialized with {len(popular_symbols)} securities')
+    else:
+        print(f'Sample data already exists ({existing_count} securities found)')
+        
 except Exception as e:
     print(f'Error initializing sample data: {e}')
     db.rollback()
