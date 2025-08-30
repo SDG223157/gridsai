@@ -1,9 +1,10 @@
 from sqlalchemy import Column, Integer, String, Text, DECIMAL, Boolean, DateTime, Date, JSON, Enum, BigInteger, ForeignKey
-from sqlalchemy.dialects.mysql import VARCHAR
+from sqlalchemy.dialects.mysql import VARCHAR, CHAR
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base
 import enum
+import uuid
 
 class RiskTolerance(enum.Enum):
     conservative = "conservative"
@@ -23,7 +24,7 @@ class AuthProvider(enum.Enum):
 class Users(Base):
     __tablename__ = "users"
 
-    id = Column(VARCHAR(36), primary_key=True, server_default=func.uuid())
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=True)
     google_id = Column(String(255), unique=True, nullable=True, index=True)
@@ -42,7 +43,7 @@ class Users(Base):
 class UserProfiles(Base):
     __tablename__ = "user_profiles"
 
-    user_id = Column(VARCHAR(36), ForeignKey("users.id"), primary_key=True)
+    user_id = Column(CHAR(36), ForeignKey("users.id"), primary_key=True)
     display_name = Column(String(100))
     first_name = Column(String(100))
     last_name = Column(String(100))
@@ -59,8 +60,8 @@ class UserProfiles(Base):
 class OAuthSessions(Base):
     __tablename__ = "oauth_sessions"
 
-    id = Column(VARCHAR(36), primary_key=True, server_default=func.uuid())
-    user_id = Column(VARCHAR(36), ForeignKey("users.id"), nullable=False)
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(CHAR(36), ForeignKey("users.id"), nullable=False)
     provider = Column(Enum(AuthProvider), nullable=False)
     access_token = Column(Text, nullable=False)
     refresh_token = Column(Text, nullable=True)
@@ -74,8 +75,8 @@ class OAuthSessions(Base):
 class Portfolios(Base):
     __tablename__ = "portfolios"
 
-    id = Column(VARCHAR(36), primary_key=True, server_default=func.uuid())
-    user_id = Column(VARCHAR(36), ForeignKey("users.id"), nullable=False)
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(CHAR(36), ForeignKey("users.id"), nullable=False)
     name = Column(String(100), nullable=False)
     strategy_type = Column(Enum(StrategyType), default=StrategyType.core_satellite)
     total_value = Column(DECIMAL(15, 2), default=0.00)
@@ -94,8 +95,8 @@ class Portfolios(Base):
 class Positions(Base):
     __tablename__ = "positions"
 
-    id = Column(VARCHAR(36), primary_key=True, server_default=func.uuid())
-    portfolio_id = Column(VARCHAR(36), ForeignKey("portfolios.id"), nullable=False)
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    portfolio_id = Column(CHAR(36), ForeignKey("portfolios.id"), nullable=False)
     symbol = Column(String(20), nullable=False)
     asset_type = Column(String(20), default="stock")
     quantity = Column(DECIMAL(15, 6), default=0.000000)
@@ -111,8 +112,8 @@ class Positions(Base):
 class GridConfigs(Base):
     __tablename__ = "grid_configs"
 
-    id = Column(VARCHAR(36), primary_key=True, server_default=func.uuid())
-    portfolio_id = Column(VARCHAR(36), ForeignKey("portfolios.id"), nullable=False)
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    portfolio_id = Column(CHAR(36), ForeignKey("portfolios.id"), nullable=False)
     symbol = Column(String(20), nullable=False)
     grid_type = Column(String(20), default="percentage")
     base_price = Column(DECIMAL(12, 6), nullable=False)
@@ -131,8 +132,8 @@ class GridConfigs(Base):
 class GridLevels(Base):
     __tablename__ = "grid_levels"
 
-    id = Column(VARCHAR(36), primary_key=True, server_default=func.uuid())
-    grid_config_id = Column(VARCHAR(36), ForeignKey("grid_configs.id"), nullable=False)
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    grid_config_id = Column(CHAR(36), ForeignKey("grid_configs.id"), nullable=False)
     level_number = Column(Integer, nullable=False)
     trigger_price = Column(DECIMAL(12, 6), nullable=False)
     target_allocation = Column(DECIMAL(5, 2), nullable=False)
@@ -146,8 +147,8 @@ class GridLevels(Base):
 class AllocationTargets(Base):
     __tablename__ = "allocation_targets"
 
-    id = Column(VARCHAR(36), primary_key=True, server_default=func.uuid())
-    portfolio_id = Column(VARCHAR(36), ForeignKey("portfolios.id"), nullable=False)
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    portfolio_id = Column(CHAR(36), ForeignKey("portfolios.id"), nullable=False)
     category = Column(String(50), default="individual")
     symbol = Column(String(20))
     sector_name = Column(String(50))
@@ -202,9 +203,9 @@ class RealTimePrices(Base):
 class Alerts(Base):
     __tablename__ = "alerts"
 
-    id = Column(VARCHAR(36), primary_key=True, server_default=func.uuid())
-    user_id = Column(VARCHAR(36), ForeignKey("users.id"), nullable=False)
-    portfolio_id = Column(VARCHAR(36), ForeignKey("portfolios.id"), nullable=True)
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(CHAR(36), ForeignKey("users.id"), nullable=False)
+    portfolio_id = Column(CHAR(36), ForeignKey("portfolios.id"), nullable=True)
     alert_type = Column(String(50), nullable=False)
     severity = Column(String(20), default="medium")
     title = Column(String(200), nullable=False)

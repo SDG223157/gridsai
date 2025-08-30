@@ -23,9 +23,18 @@ fi
 # Run database migrations
 echo "Running database migrations..."
 cd /app && python -c "
-from app.database import engine, Base
-Base.metadata.create_all(bind=engine)
-print('Database tables created successfully')
+try:
+    from app.init_db import init_database
+    success = init_database()
+    if not success:
+        print('Database initialization failed')
+        exit(1)
+except Exception as e:
+    print(f'Database initialization error: {e}')
+    # Fallback to simple table creation
+    from app.database import engine, Base
+    Base.metadata.create_all(bind=engine)
+    print('Database tables created successfully (fallback)')
 "
 
 # Initialize sample data if needed
@@ -34,36 +43,53 @@ if [ "$INIT_SAMPLE_DATA" = "true" ]; then
     # Wait a moment for database to be fully ready
     sleep 2
     cd /app && python -c "
-from app.database import SessionLocal, engine
-from app.models import Securities, Base
+from app.database import SessionLocal
+from app.models import Securities
 import time
 
-# Ensure all tables exist
-Base.metadata.create_all(bind=engine)
-time.sleep(1)
+# Wait for database to be ready
+time.sleep(2)
 
 db = SessionLocal()
 try:
     popular_symbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'SPY', 'QQQ']
     
     # Check if any securities already exist
-    existing_count = db.query(Securities).count()
+    try:
+        existing_count = db.query(Securities).count()
+        print(f'Found {existing_count} existing securities')
+    except Exception as e:
+        print(f'Securities table not ready yet: {e}')
+        existing_count = 0
     
     if existing_count == 0:
         for symbol in popular_symbols:
-            security = Securities(symbol=symbol, name=f'{symbol} Corp', is_active=True)
-            db.add(security)
+            try:
+                security = Securities(symbol=symbol, name=f'{symbol} Corp', is_active=True)
+                db.add(security)
+            except Exception as e:
+                print(f'Error adding {symbol}: {e}')
         
-        db.commit()
-        print(f'Sample data initialized with {len(popular_symbols)} securities')
+        try:
+            db.commit()
+            print(f'Sample data initialized with {len(popular_symbols)} securities')
+        except Exception as e:
+            print(f'Error committing sample data: {e}')
+            db.rollback()
     else:
         print(f'Sample data already exists ({existing_count} securities found)')
         
 except Exception as e:
     print(f'Error initializing sample data: {e}')
-    db.rollback()
+    try:
+        db.rollback()
+    except:
+        pass
 finally:
-    db.close()
+    try:
+        db.close()
+    except:
+        pass
 "
 fi
 
