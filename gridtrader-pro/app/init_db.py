@@ -4,8 +4,8 @@ Database initialization script for GridTrader Pro
 Creates all tables and handles MySQL compatibility
 """
 
-from database import engine, Base
-from models import *
+from .database import engine, Base
+from .models import *
 import logging
 
 logging.basicConfig(level=logging.INFO)

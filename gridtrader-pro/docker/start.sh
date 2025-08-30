@@ -23,18 +23,35 @@ fi
 # Run database migrations
 echo "Running database migrations..."
 cd /app && python -c "
+import sys
+import os
+sys.path.insert(0, '/app')
+
 try:
-    from app.init_db import init_database
-    success = init_database()
-    if not success:
-        print('Database initialization failed')
-        exit(1)
+    from app.database import engine, Base
+    from app.models import *
+    
+    print('Creating all database tables...')
+    Base.metadata.create_all(bind=engine)
+    
+    # Verify tables were created
+    from sqlalchemy import inspect
+    inspector = inspect(engine)
+    tables = inspector.get_table_names()
+    print(f'Created {len(tables)} tables: {tables}')
+    
+    if 'securities' in tables:
+        print('Securities table created successfully')
+    else:
+        print('Warning: Securities table not found in created tables')
+        
+    print('Database tables created successfully')
+    
 except Exception as e:
     print(f'Database initialization error: {e}')
-    # Fallback to simple table creation
-    from app.database import engine, Base
-    Base.metadata.create_all(bind=engine)
-    print('Database tables created successfully (fallback)')
+    import traceback
+    traceback.print_exc()
+    exit(1)
 "
 
 # Initialize sample data if needed
@@ -43,44 +60,50 @@ if [ "$INIT_SAMPLE_DATA" = "true" ]; then
     # Wait a moment for database to be fully ready
     sleep 2
     cd /app && python -c "
-from app.database import SessionLocal
-from app.models import Securities
+import sys
+import os
 import time
+sys.path.insert(0, '/app')
 
-# Wait for database to be ready
-time.sleep(2)
+from app.database import SessionLocal, engine
+from app.models import Securities
+from sqlalchemy import inspect
+
+# Wait for database to be ready and verify tables exist
+time.sleep(3)
+
+# Verify securities table exists
+inspector = inspect(engine)
+tables = inspector.get_table_names()
+print(f'Available tables: {tables}')
+
+if 'securities' not in tables:
+    print('Securities table not found, skipping sample data initialization')
+    exit(0)
 
 db = SessionLocal()
 try:
     popular_symbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'SPY', 'QQQ']
     
     # Check if any securities already exist
-    try:
-        existing_count = db.query(Securities).count()
-        print(f'Found {existing_count} existing securities')
-    except Exception as e:
-        print(f'Securities table not ready yet: {e}')
-        existing_count = 0
+    existing_count = db.query(Securities).count()
+    print(f'Found {existing_count} existing securities')
     
     if existing_count == 0:
+        print(f'Adding {len(popular_symbols)} sample securities...')
         for symbol in popular_symbols:
-            try:
-                security = Securities(symbol=symbol, name=f'{symbol} Corp', is_active=True)
-                db.add(security)
-            except Exception as e:
-                print(f'Error adding {symbol}: {e}')
+            security = Securities(symbol=symbol, name=f'{symbol} Corp', is_active=True)
+            db.add(security)
         
-        try:
-            db.commit()
-            print(f'Sample data initialized with {len(popular_symbols)} securities')
-        except Exception as e:
-            print(f'Error committing sample data: {e}')
-            db.rollback()
+        db.commit()
+        print(f'Sample data initialized successfully with {len(popular_symbols)} securities')
     else:
         print(f'Sample data already exists ({existing_count} securities found)')
         
 except Exception as e:
     print(f'Error initializing sample data: {e}')
+    import traceback
+    traceback.print_exc()
     try:
         db.rollback()
     except:
