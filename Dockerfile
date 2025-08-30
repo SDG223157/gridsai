@@ -1,5 +1,5 @@
-# GridTrader Pro - COMPLETELY NEW DOCKERFILE
-# NO CACHE VERSION - 2024-08-30
+# GridTrader Pro - STREAMLIT FOCUS v4
+# CACHE BUST: 2024-08-30-v4 - Disable FastAPI, focus on Streamlit
 FROM python:3.11-slim
 
 # Unique environment to break all caches
