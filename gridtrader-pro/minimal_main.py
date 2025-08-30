@@ -94,22 +94,19 @@ async def register(email: str, password: str, display_name: str = None):
         raise HTTPException(status_code=400, detail="Invalid registration data")
 
 @app.get("/api/v1/auth/google/callback")
-async def google_callback(code: str = None, error: str = None):
+async def google_callback(code: str = None, error: str = None, state: str = None):
     """Handle Google OAuth callback"""
     if error:
-        return {"error": error, "message": "OAuth authentication failed"}
+        # Redirect back to main page with error
+        return RedirectResponse(url=f"https://gridsai.app?error={error}")
     
     if not code:
-        return {"error": "no_code", "message": "No authorization code received"}
+        # Redirect back to main page with error
+        return RedirectResponse(url="https://gridsai.app?error=no_authorization_code")
     
-    # For now, return success message
-    # In full implementation, this would exchange code for tokens
-    return {
-        "message": "OAuth callback received successfully",
-        "code": code[:10] + "...",  # Show partial code for security
-        "next_step": "Token exchange would happen here",
-        "redirect": "https://gridsai.app?auth=success"
-    }
+    # For demo purposes, create a demo token and redirect to success
+    demo_token = f"demo_google_token_{code[:8]}"
+    return RedirectResponse(url=f"https://gridsai.app?token={demo_token}&auth=google_success")
 
 @app.get("/api/v1/auth/me")
 async def get_current_user():
@@ -149,6 +146,19 @@ async def search_securities(q: str = "AAPL"):
 async def redirect_to_docs():
     """Redirect to API documentation"""
     return RedirectResponse(url="/docs")
+
+@app.get("/debug/oauth")
+async def debug_oauth():
+    """Debug OAuth configuration"""
+    return {
+        "google_oauth_url": "https://accounts.google.com/oauth2/auth",
+        "client_id": "178454917807-ivou0uehjcamas4s4p2qsjhbf218ks43.apps.googleusercontent.com",
+        "redirect_uri": "https://gridsai.app/api/v1/auth/google/callback",
+        "scope": "openid email profile",
+        "response_type": "code",
+        "note": "Ensure this redirect_uri is added to Google Console",
+        "google_console_url": "https://console.cloud.google.com/apis/credentials"
+    }
 
 if __name__ == "__main__":
     import uvicorn
