@@ -81,7 +81,7 @@ REDIS_URL=redis://your-redis-connection
 ```bash
 # Build and run
 docker build -t gridtrader-pro .
-docker run -p 8000:8000 --env-file .env gridtrader-pro
+docker run -p 3000:3000 --env-file .env gridtrader-pro
 ```
 
 ### 4. Access the Application

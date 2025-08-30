@@ -17,10 +17,10 @@ This guide provides step-by-step instructions to deploy GridTrader Pro to gridsa
    - Name: GridTrader Pro
    - Authorized JavaScript origins:
      - `https://gridsai.app`
-     - `http://localhost:8000` (for development)
+     - `http://localhost:3000` (for development)
    - Authorized redirect URIs:
      - `https://gridsai.app/api/v1/auth/google/callback`
-     - `http://localhost:8000/api/v1/auth/google/callback` (for development)
+     - `http://localhost:3000/api/v1/auth/google/callback` (for development)
 5. Copy Client ID and Client Secret
 
 ### 2. Database Setup
@@ -55,7 +55,7 @@ GOOGLE_REDIRECT_URI=https://gridsai.app/api/v1/auth/google/callback
 SECRET_KEY=your_super_secret_jwt_key_at_least_32_characters_long
 ENVIRONMENT=production
 HOST=0.0.0.0
-PORT=8000
+PORT=3000
 FRONTEND_URL=https://gridsai.app
 
 # JWT Configuration
@@ -103,7 +103,7 @@ openssl rand -base64 64
 - **Name**: gridtrader-pro
 - **Build Pack**: Docker
 - **Dockerfile Location**: `./Dockerfile`
-- **Port**: 8000
+- **Port**: 3000
 - **Domain**: gridsai.app
 
 ### 3. Environment Variables
