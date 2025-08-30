@@ -1,61 +1,45 @@
-# GridTrader Pro Dockerfile - COMPLETE REBUILD v3
-# FORCE REBUILD: 2024-08-30-FINAL - New database setup approach
+# GridTrader Pro - COMPLETELY NEW DOCKERFILE
+# NO CACHE VERSION - 2024-08-30
 FROM python:3.11-slim
 
+# Unique environment to break all caches
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
-ENV PIP_NO_CACHE_DIR=1
-ENV PIP_DISABLE_PIP_VERSION_CHECK=1
-ENV REBUILD_CACHE=v3
+ENV REBUILD_VERSION=2024-08-30-NUCLEAR
+ENV CACHE_BUST=12345
 
-# Install system dependencies
+# Update system and install dependencies
 RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    default-libmysqlclient-dev \
-    pkg-config \
-    curl \
-    redis-tools \
-    supervisor \
-    nginx \
-    && rm -rf /var/lib/apt/lists/*
+    gcc g++ default-libmysqlclient-dev pkg-config \
+    curl redis-tools supervisor nginx netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd -m -u 1000 appuser
 
-# Create app user
-RUN useradd -m -u 1000 appuser
-
-# Set work directory
 WORKDIR /app
 
-# Install Python dependencies
-COPY gridtrader-pro/requirements.txt .
+# Copy and install Python requirements
+COPY gridtrader-pro/requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy configuration files first (from build context)
-COPY gridtrader-pro/docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY gridtrader-pro/docker/nginx.conf /etc/nginx/sites-available/default
-COPY gridtrader-pro/docker/start.sh /app/start.sh
-RUN chmod +x /app/start.sh
+# Copy entire application
+COPY gridtrader-pro/ /app/
 
-# Copy application code
-COPY gridtrader-pro/ .
-# Ensure setup_database.py is executable
-RUN chmod +x setup_database.py
-RUN chown -R appuser:appuser /app
+# Setup directories and permissions
+RUN mkdir -p /app/logs /var/log/supervisor /var/log/nginx && \
+    chown -R appuser:appuser /app && \
+    chmod +x /app/docker/start.sh && \
+    chmod +x /app/simple_db_setup.py
 
-# Create necessary directories
-RUN mkdir -p /app/logs /var/log/supervisor /var/log/nginx \
-    && chown -R appuser:appuser /app/logs \
-    && chmod 755 /app/logs
+# Copy configuration files
+RUN cp /app/docker/supervisord.conf /etc/supervisor/conf.d/ && \
+    cp /app/docker/nginx.conf /etc/nginx/sites-available/default && \
+    cp /app/docker/start.sh /start.sh && \
+    chmod +x /start.sh
 
-# Expose port
 EXPOSE 3000
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:3000/health || exit 1
 
-# Switch to root for supervisor
 USER root
-
-# Start command
-CMD ["/app/start.sh"]
+CMD ["/start.sh"]
