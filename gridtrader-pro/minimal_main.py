@@ -4,10 +4,12 @@ Minimal FastAPI application with essential routes
 This serves as a fallback if the full app.main fails to import
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 import os
+import httpx
+import urllib.parse
 
 # Create FastAPI app
 app = FastAPI(
@@ -50,18 +52,32 @@ async def health_check():
 
 # Auth routes
 @app.get("/api/v1/auth/google")
-async def google_auth():
-    """Redirect to Google OAuth"""
-    google_oauth_url = (
-        "https://accounts.google.com/oauth2/auth?"
-        "client_id=178454917807-ivou0uehjcamas4s4p2qsjhbf218ks43.apps.googleusercontent.com&"
-        "redirect_uri=https://gridsai.app/api/v1/auth/google/callback&"
-        "response_type=code&"
-        "scope=openid email profile&"
-        "access_type=offline&"
-        "prompt=select_account"
-    )
-    return RedirectResponse(url=google_oauth_url)
+async def google_auth(request: Request):
+    """Initiate Google OAuth flow"""
+    
+    client_id = os.getenv("GOOGLE_CLIENT_ID")
+    redirect_uri = os.getenv("GOOGLE_REDIRECT_URI", "https://gridsai.app/api/v1/auth/google/callback")
+    
+    if not client_id:
+        raise HTTPException(status_code=500, detail="Google OAuth not configured")
+    
+    # Generate state parameter for security
+    import secrets
+    state = secrets.token_urlsafe(32)
+    
+    # Build OAuth URL
+    params = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "access_type": "offline",
+        "prompt": "select_account",
+        "state": state
+    }
+    
+    oauth_url = "https://accounts.google.com/oauth2/auth?" + urllib.parse.urlencode(params)
+    return RedirectResponse(url=oauth_url)
 
 @app.post("/api/v1/auth/login")
 async def login(email: str, password: str):
@@ -94,19 +110,81 @@ async def register(email: str, password: str, display_name: str = None):
         raise HTTPException(status_code=400, detail="Invalid registration data")
 
 @app.get("/api/v1/auth/google/callback")
-async def google_callback(code: str = None, error: str = None, state: str = None):
-    """Handle Google OAuth callback"""
+async def google_callback(request: Request, code: str = None, error: str = None, state: str = None):
+    """Handle Google OAuth callback - Exchange code for tokens"""
+    
     if error:
-        # Redirect back to main page with error
         return RedirectResponse(url=f"https://gridsai.app?error={error}")
     
     if not code:
-        # Redirect back to main page with error
         return RedirectResponse(url="https://gridsai.app?error=no_authorization_code")
     
-    # For demo purposes, create a demo token and redirect to success
-    demo_token = f"demo_google_token_{code[:8]}"
-    return RedirectResponse(url=f"https://gridsai.app?token={demo_token}&auth=google_success")
+    try:
+        client_id = os.getenv("GOOGLE_CLIENT_ID")
+        client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
+        redirect_uri = os.getenv("GOOGLE_REDIRECT_URI", "https://gridsai.app/api/v1/auth/google/callback")
+        
+        if not client_id or not client_secret:
+            return RedirectResponse(url="https://gridsai.app?error=oauth_not_configured")
+        
+        # Exchange authorization code for access token
+        token_url = "https://oauth2.googleapis.com/token"
+        token_data = {
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "code": code,
+            "grant_type": "authorization_code",
+            "redirect_uri": redirect_uri
+        }
+        
+        async with httpx.AsyncClient() as client:
+            token_response = await client.post(token_url, data=token_data)
+            token_result = token_response.json()
+        
+        if token_response.status_code != 200:
+            return RedirectResponse(url="https://gridsai.app?error=token_exchange_failed")
+        
+        access_token = token_result.get("access_token")
+        
+        # Get user info from Google
+        async with httpx.AsyncClient() as client:
+            user_response = await client.get(
+                "https://www.googleapis.com/oauth2/v2/userinfo",
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            user_info = user_response.json()
+        
+        if user_response.status_code != 200:
+            return RedirectResponse(url="https://gridsai.app?error=user_info_failed")
+        
+        # Create session token
+        try:
+            import jwt
+            session_token = jwt.encode({
+                "email": user_info.get("email"),
+                "name": user_info.get("name"),
+                "picture": user_info.get("picture"),
+                "google_id": user_info.get("id"),
+                "exp": 9999999999  # Long expiry for demo
+            }, os.getenv("SECRET_KEY", "demo_secret"), algorithm="HS256")
+        except ImportError:
+            # Fallback if PyJWT not available
+            session_token = f"demo_token_{user_info.get('email', 'user')}"
+        
+        # Redirect back to app with token and user info
+        redirect_url = (
+            f"https://gridsai.app?"
+            f"token={session_token}&"
+            f"auth=google_success&"
+            f"name={urllib.parse.quote(user_info.get('name', ''))}&"
+            f"email={urllib.parse.quote(user_info.get('email', ''))}&"
+            f"picture={urllib.parse.quote(user_info.get('picture', ''))}"
+        )
+        
+        return RedirectResponse(url=redirect_url)
+        
+    except Exception as e:
+        return RedirectResponse(url="https://gridsai.app?error=oauth_processing_failed")
 
 @app.get("/api/v1/auth/me")
 async def get_current_user():
@@ -152,12 +230,13 @@ async def debug_oauth():
     """Debug OAuth configuration"""
     return {
         "google_oauth_url": "https://accounts.google.com/oauth2/auth",
-        "client_id": "178454917807-ivou0uehjcamas4s4p2qsjhbf218ks43.apps.googleusercontent.com",
-        "redirect_uri": "https://gridsai.app/api/v1/auth/google/callback",
+        "client_id": os.getenv("GOOGLE_CLIENT_ID"),
+        "redirect_uri": os.getenv("GOOGLE_REDIRECT_URI", "https://gridsai.app/api/v1/auth/google/callback"),
         "scope": "openid email profile",
         "response_type": "code",
         "note": "Ensure this redirect_uri is added to Google Console",
-        "google_console_url": "https://console.cloud.google.com/apis/credentials"
+        "google_console_url": "https://console.cloud.google.com/apis/credentials",
+        "environment_configured": bool(os.getenv("GOOGLE_CLIENT_ID") and os.getenv("GOOGLE_CLIENT_SECRET"))
     }
 
 if __name__ == "__main__":
