@@ -6,7 +6,7 @@ FROM python:3.11-slim
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV REBUILD_VERSION=2024-08-30-NUCLEAR
-ENV CACHE_BUST=12345
+ENV CACHE_BUST=67890
 
 # Update system and install dependencies
 RUN apt-get update && apt-get install -y \
