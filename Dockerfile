@@ -1,4 +1,5 @@
 # Multi-stage Dockerfile for Coolify deployment
+# Updated: 2024-08-30 - Fixed database initialization
 FROM python:3.11-slim AS base
 
 ENV PYTHONUNBUFFERED=1
@@ -36,6 +37,8 @@ RUN chmod +x /app/start.sh
 
 # Copy application code
 COPY gridtrader-pro/ .
+# Ensure setup_database.py is executable
+RUN chmod +x setup_database.py
 RUN chown -R appuser:appuser /app
 
 # Create necessary directories
