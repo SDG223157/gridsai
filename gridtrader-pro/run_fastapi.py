@@ -53,20 +53,11 @@ def start_fastapi():
             except Exception as e:
                 print(f"❌ Method 2 failed: {e}")
                 
-                # Method 3: Create minimal app
-                print("Creating minimal FastAPI app...")
-                from fastapi import FastAPI
-                app = FastAPI(title="GridTrader Pro API", version="1.0.0")
-                
-                @app.get("/")
-                def root():
-                    return {"message": "GridTrader Pro API", "status": "running"}
-                
-                @app.get("/health")
-                def health():
-                    return {"status": "healthy", "service": "fastapi"}
-                
-                print("✅ Created minimal FastAPI app")
+                # Method 3: Use minimal app
+                print("Loading minimal FastAPI app...")
+                import minimal_main
+                app = minimal_main.app
+                print("✅ Loaded minimal FastAPI app with full routes")
         
         # Start the server
         print("Starting uvicorn server...")
